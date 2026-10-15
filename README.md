@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/bevly0101/niggatron/refs/heads/main/assets/niggatron-logo.png" alt="NiggaTron" width="360" />
+<img src="https://github.com/richards-franca/ng-assistent/blob/main/assets/niggatron-logo.png" alt="NiggaTron" width="360" />
 
 # NiggaTron
 
