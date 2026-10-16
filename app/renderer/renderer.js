@@ -1,24 +1,56 @@
-const $ = (id) => document.getElementById(id);
+const $ = id => document.getElementById(id);
 const SEGMENT_DURATION_MS = 4 * 60 * 1000;
-let recorder, recordingSegments = [], segmentChunks = [], timerId, segmentTimer, startedAt, monitorFrame, recordingActive = false, pendingDeletion = null;
-const setMessage = (text) => $('message').textContent = text;
-const setState = (text, recording = false) => { $('state').textContent = text; $('state').classList.toggle('recording', recording); };
+let recorder;
+let recordingSegments = [];
+let segmentChunks = [];
+let timerId;
+let segmentTimer;
+let startedAt;
+let monitorFrame;
+let recordingActive = false;
+let pendingDeletion = null;
+let lastFocusedElement = null;
 
-function startBootSequence() {
-  const bootText = $('bootText');
-  try {
-    const context = new AudioContext();
-    [0, .13, .26, .42].forEach((delay, index) => {
-      const oscillator = context.createOscillator(); const gain = context.createGain();
-      oscillator.type = index === 3 ? 'square' : 'sine'; oscillator.frequency.value = [330, 494, 660, 880][index];
-      gain.gain.setValueAtTime(.0001, context.currentTime + delay); gain.gain.exponentialRampToValueAtTime(.07, context.currentTime + delay + .01); gain.gain.exponentialRampToValueAtTime(.0001, context.currentTime + delay + .11);
-      oscillator.connect(gain).connect(context.destination); oscillator.start(context.currentTime + delay); oscillator.stop(context.currentTime + delay + .13);
-    });
-    setTimeout(() => context.close(), 900);
-  } catch { /* O app continua normalmente se o dispositivo de áudio não estiver disponível. */ }
-  setTimeout(() => { bootText.textContent = 'SINAL DE ÁUDIO: ONLINE'; }, 850);
-  setTimeout(() => { bootText.textContent = 'INTERFACE PRONTA'; }, 1700);
-  setTimeout(() => { $('bootScreen').classList.add('hidden'); }, 2800);
+const setMessage = text => { $('message').textContent = text || ''; };
+
+function setState(text, recording = false) {
+  $('state').textContent = String(text || '').toUpperCase();
+  $('captureDot').parentElement.classList.toggle('is-recording', recording);
+  $('headerStatus').textContent = recording ? `● LIVE / ${$('timer').textContent}` : 'SYSTEM / ONLINE';
+}
+
+function setLivePhase(phase) {
+  $('captureLayout').classList.toggle('hidden', phase !== 'ready');
+  $('activeCapture').classList.toggle('hidden', phase !== 'recording');
+  $('processing').classList.toggle('hidden', phase !== 'processing');
+  $('result').classList.toggle('hidden', phase !== 'result');
+  $('finishResult').classList.toggle('hidden', phase !== 'result');
+  $('footerPrimary').textContent = phase === 'result' || phase === 'processing'
+    ? 'DUPLEX CAPTURE ACTIVE — CLIENT AND OPERATOR SIGNALS OVERLAID'
+    : 'CAUTION — AUDIO TRANSCRIPTS ARE HANDLED IN A SECURE SESSION.';
+  $('footerSecondary').classList.toggle('hidden', phase !== 'ready');
+  $('viewSubtitle').textContent = phase === 'recording' || phase === 'processing'
+    ? '// atendimento em andamento'
+    : phase === 'result' ? '// transcrição pronta' : '// assistente de suporte';
+}
+
+function openMenu() {
+  lastFocusedElement = document.activeElement;
+  $('sideMenu').classList.add('open');
+  $('sideMenu').setAttribute('aria-hidden', 'false');
+  $('menuToggle').setAttribute('aria-expanded', 'true');
+  $('menuToggle').setAttribute('aria-label', 'Fechar menu');
+  $('menuScrim').classList.remove('hidden');
+  $('sideMenu').querySelector('a.selected')?.focus();
+}
+
+function closeMenu(restoreFocus = true) {
+  $('sideMenu').classList.remove('open');
+  $('sideMenu').setAttribute('aria-hidden', 'true');
+  $('menuToggle').setAttribute('aria-expanded', 'false');
+  $('menuToggle').setAttribute('aria-label', 'Abrir menu');
+  $('menuScrim').classList.add('hidden');
+  if (restoreFocus) lastFocusedElement?.focus?.();
 }
 
 function showView(view) {
@@ -30,8 +62,11 @@ function showView(view) {
   $('liveNav').classList.toggle('selected', !encrypted && !history);
   $('encryptedNav').classList.toggle('selected', encrypted);
   $('historyNav').classList.toggle('selected', history);
-  if (encrypted) loadApiKeyStatus();
+  $('viewSubtitle').textContent = history ? '// arquivo local' : encrypted ? '// configuração do sistema' : '// assistente de suporte';
+  closeMenu(false);
+  if (encrypted) loadSettings();
   if (history) loadHistory();
+  $('mainContent').focus();
 }
 
 function addText(parent, tag, className, text) {
@@ -42,166 +77,228 @@ function addText(parent, tag, className, text) {
   return element;
 }
 
+function makeButton(label, className, handler) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = className;
+  button.textContent = label;
+  button.addEventListener('click', handler);
+  return button;
+}
+
 function openDeleteModal(record, card) {
   pendingDeletion = { record, card };
+  lastFocusedElement = document.activeElement;
   $('deleteMessage').textContent = `O registro "${record.title || 'sem título'}" será removido do arquivo local.`;
   $('deleteModal').classList.remove('hidden');
+  $('confirmDelete').focus();
 }
-function closeDeleteModal() { pendingDeletion = null; $('deleteModal').classList.add('hidden'); }
-function playDeleteSound() {
-  try {
-    const context = new AudioContext(); const start = context.currentTime;
-    [260, 180, 110, 58].forEach((frequency, index) => {
-      const oscillator = context.createOscillator(); const gain = context.createGain();
-      oscillator.type = 'square'; oscillator.frequency.setValueAtTime(frequency, start + index * .055);
-      gain.gain.setValueAtTime(.0001, start + index * .055); gain.gain.exponentialRampToValueAtTime(.09, start + index * .055 + .008); gain.gain.exponentialRampToValueAtTime(.0001, start + index * .055 + .07);
-      oscillator.connect(gain).connect(context.destination); oscillator.start(start + index * .055); oscillator.stop(start + index * .055 + .08);
-    });
-    const buffer = context.createBuffer(1, context.sampleRate * .24, context.sampleRate); const data = buffer.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
-    const noise = context.createBufferSource(); const gain = context.createGain(); noise.buffer = buffer; gain.gain.value = .08; noise.connect(gain).connect(context.destination); noise.start(start + .12);
-    setTimeout(() => context.close(), 600);
-  } catch { /* A exclusão continua mesmo se não houver saída de áudio disponível. */ }
-}
-function disintegrate(card) {
-  const pixels = document.createElement('div'); pixels.className = 'delete-pixels';
-  for (let i = 0; i < 42; i++) { const pixel = document.createElement('i'); pixel.style.left = `${8 + Math.random() * 84}%`; pixel.style.top = `${12 + Math.random() * 76}%`; pixel.style.setProperty('--dx', `${(Math.random() - .5) * 280}px`); pixel.style.setProperty('--dy', `${(Math.random() - .65) * 210}px`); pixel.style.animationDelay = `${Math.random() * .14}s`; pixels.appendChild(pixel); }
-  card.appendChild(pixels); card.classList.add('is-deleting'); requestAnimationFrame(() => pixels.classList.add('burst'));
-  return new Promise(resolve => setTimeout(resolve, 760));
+
+function closeDeleteModal() {
+  pendingDeletion = null;
+  $('deleteModal').classList.add('hidden');
+  lastFocusedElement?.focus?.();
 }
 
 async function loadHistory() {
   const list = $('historyList');
   const message = $('historyMessage');
-  list.replaceChildren(); message.textContent = 'Carregando atendimentos...';
+  list.replaceChildren();
+  message.textContent = 'Carregando atendimentos…';
   try {
     const records = await window.niggatron.listRecords();
-    message.textContent = records.length ? `${records.length} atendimento(s) armazenado(s) neste computador.` : 'Nenhum atendimento armazenado ainda.';
+    $('historyCount').textContent = `${String(records.length).padStart(2, '0')} REGISTRO${records.length === 1 ? '' : 'S'}`;
+    message.textContent = records.length ? '' : 'Nenhum atendimento armazenado ainda.';
     records.forEach(record => {
-      const card = document.createElement('article'); card.className = 'panel history-card';
-      const bracket = document.createElement('i'); bracket.className = 'brackets'; card.appendChild(bracket);
-      const header = document.createElement('div'); header.className = 'history-header';
+      const card = document.createElement('article');
+      card.className = 'history-card';
+      const header = document.createElement('header');
       addText(header, 'h2', '', record.title || 'Atendimento sem título');
       addText(header, 'time', '', new Date(record.createdAt).toLocaleString('pt-BR'));
       card.appendChild(header);
-      if (record.clientEmail) addText(card, 'p', 'history-description', `Cliente: ${record.clientEmail}`);
-      const tags = document.createElement('div'); tags.className = 'tags';
-      (record.tags || []).forEach(tag => addText(tags, 'span', 'tag', tag)); card.appendChild(tags);
-      [['Descrição', record.description], ['Com resolução', record.resolutionDescription], ['Mais detalhada', record.detailedDescription]].forEach(([label, text]) => {
-        const block = document.createElement('div'); block.className = 'history-description';
-        addText(block, 'strong', '', `${label}: `); addText(block, 'span', '', text || '—'); card.appendChild(block);
-      });
+      addText(card, 'p', 'history-description', record.description || 'Sem descrição.');
+      addText(card, 'p', 'history-email', `CLIENTE: ${record.clientEmail || '- - --'}`);
+      const actions = document.createElement('div');
+      actions.className = 'history-actions';
       const details = document.createElement('details');
-      addText(details, 'summary', '', '> VER TRANSCRIÇÃO');
-      addText(details, 'p', '', record.transcript || 'Transcrição não disponível.'); card.appendChild(details);
-      const remove = document.createElement('button'); remove.className = 'stop-button'; remove.textContent = 'APAGAR ATENDIMENTO';
-      remove.addEventListener('click', () => openDeleteModal(record, card));
-      card.appendChild(remove);
+      const summary = addText(details, 'summary', '', 'TRANSCRIÇÃO DO ATENDIMENTO');
+      addText(details, 'p', '', record.transcript || 'Transcrição não disponível.');
+      const open = makeButton('VER TRANSCRIÇÃO', 'button button-dark', () => {
+        details.open = !details.open;
+        open.textContent = details.open ? 'FECHAR TRANSCRIÇÃO' : 'VER TRANSCRIÇÃO';
+        if (details.open) summary.focus();
+      });
+      const remove = makeButton('APAGAR', 'button button-outline delete-record', () => openDeleteModal(record, card));
+      remove.setAttribute('aria-label', `Apagar ${record.title || 'atendimento sem título'}`);
+      actions.append(open, remove);
+      card.append(actions, details);
       list.appendChild(card);
     });
-  } catch (error) { message.textContent = error.message || 'Não foi possível carregar o histórico.'; }
+  } catch (error) {
+    message.textContent = error.message || 'Não foi possível carregar o histórico.';
+  }
 }
 
-async function loadApiKeyStatus() {
+async function loadSettings() {
   try {
-    const configured = await window.niggatron.apiKeyStatus();
-    $('apiKeyStatus').textContent = configured ? 'STATUS: CHAVE CONFIGURADA E PROTEGIDA' : 'STATUS: NENHUMA CHAVE CONFIGURADA';
+    const [configured, model] = await Promise.all([
+      window.niggatron.apiKeyStatus(),
+      window.niggatron.getGroqModel()
+    ]);
+    $('apiKeyStatus').textContent = configured ? 'ENCRYPTED LOCALLY / KEY CONFIGURED' : 'ENCRYPTED LOCALLY / NO KEY';
     $('apiKeyStatus').classList.toggle('configured', configured);
-    $('savedApiKey').placeholder = configured ? '••••••••  CHAVE CONFIGURADA' : 'gsk_...';
-  } catch (error) { $('apiKeyStatus').textContent = error.message; }
+    $('savedApiKey').placeholder = configured ? 'gsk_••••••••••••••••••••' : 'gsk_...';
+    if (model) {
+      if (![...$('groqModel').options].some(option => option.value === model)) {
+        $('groqModel').append(new Option(model, model));
+      }
+      $('groqModel').value = model;
+    }
+  } catch (error) {
+    $('apiKeyStatus').textContent = error.message || 'Não foi possível carregar as configurações.';
+  }
 }
 
-async function saveApiKey() {
+async function loadAppVersion() {
   try {
-    await window.niggatron.saveApiKey($('savedApiKey').value);
+    const version = await window.niggatron.getAppVersion();
+    const label = `v${String(version).replace(/^v/, '')}`;
+    $('brandVersion').textContent = label;
+    $('currentBuild').textContent = label;
+  } catch {
+    // The packaged fallback remains visible if IPC is unavailable.
+  }
+}
+
+async function saveSettings() {
+  const key = $('savedApiKey').value.trim();
+  const model = $('groqModel').value;
+  $('saveApiKey').disabled = true;
+  try {
+    const operations = [window.niggatron.saveGroqModel(model)];
+    if (key) operations.push(window.niggatron.saveApiKey(key));
+    await Promise.all(operations);
     $('savedApiKey').value = '';
-    await loadApiKeyStatus();
-  } catch (error) { $('apiKeyStatus').textContent = error.message || 'Não foi possível salvar a chave.'; }
+    await loadSettings();
+    $('apiKeyStatus').textContent = key ? 'CHAVE E MODELO SALVOS COM SEGURANÇA' : 'MODELO SALVO; CHAVE EXISTENTE PRESERVADA';
+  } catch (error) {
+    $('apiKeyStatus').textContent = error.message || 'Não foi possível salvar as configurações.';
+  } finally {
+    $('saveApiKey').disabled = false;
+  }
 }
 
 async function loadMicrophones() {
   try {
     const preflight = await navigator.mediaDevices.getUserMedia({ audio: true });
-    preflight.getTracks().forEach(t => t.stop());
-    const devices = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput');
-    $('microphone').innerHTML = devices.map((d, i) => `<option value="${d.deviceId}">${d.label || `Microfone ${i + 1}`}</option>`).join('');
-  } catch { $('microphone').innerHTML = '<option value="">Microfone padrão</option>'; }
+    preflight.getTracks().forEach(track => track.stop());
+    const devices = (await navigator.mediaDevices.enumerateDevices()).filter(device => device.kind === 'audioinput');
+    $('microphone').replaceChildren();
+    devices.forEach((device, index) => $('microphone').append(new Option(device.label || `Microfone ${index + 1}`, device.deviceId)));
+    if (!devices.length) $('microphone').append(new Option('Microfone padrão', ''));
+    updateInputLabel();
+  } catch {
+    $('microphone').replaceChildren(new Option('Microfone padrão', ''));
+    updateInputLabel();
+  }
+}
+
+function updateInputLabel() {
+  const text = $('microphone').selectedOptions[0]?.textContent || 'SYSTEM MICROPHONE';
+  $('inputSource').textContent = `INPUT: ${text.toUpperCase()}`;
 }
 
 function formatTime() {
   const seconds = Math.floor((Date.now() - startedAt) / 1000);
-  $('timer').textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+  const formatted = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+  $('timer').textContent = formatted;
+  if (recordingActive) $('headerStatus').textContent = `● LIVE / ${formatted}`;
 }
 
 function clearPreviousRecord() {
-  $('result').classList.add('hidden');
-  $('title').value = ''; $('description').value = ''; $('resolutionDescription').value = ''; $('detailedDescription').value = '';
-  $('tags').replaceChildren(); $('transcript').textContent = ''; $('clientEmail').value = ''; $('timer').textContent = '00:00';
+  $('title').value = '';
+  $('description').value = '';
+  $('resolutionDescription').value = '';
+  $('detailedDescription').value = '';
+  $('tags').replaceChildren();
+  $('transcript').textContent = '';
+  $('timer').textContent = '00:00';
 }
 
 function setMonitorState(active) {
   $('audioMonitorState').textContent = active ? 'OUVINDO' : 'AGUARDANDO';
-  $('audioMonitorState').style.color = active ? '#00f3ff' : '#849495';
-  ['micIndicator', 'clientIndicator'].forEach(id => { $(id).style.background = active ? '#00f3ff' : '#3a494b'; $(id).style.boxShadow = active ? '0 0 8px #00f3ff' : 'none'; });
+  ['micIndicator', 'clientIndicator'].forEach(id => {
+    $(id).style.background = active ? '#080a09' : '#929b97';
+  });
 }
 
 function stopAudioMonitor() {
   if (monitorFrame) cancelAnimationFrame(monitorFrame);
-  monitorFrame = null; setMonitorState(false);
-  const canvas = $('audioWaveform'); const draw = canvas.getContext('2d');
-  draw.fillStyle = '#0e0e0e'; draw.fillRect(0, 0, canvas.width, canvas.height);
-  draw.strokeStyle = '#3a494b'; draw.lineWidth = 1;
-  [50, 110].forEach(y => { draw.beginPath(); draw.moveTo(0, y); draw.lineTo(canvas.width, y); draw.stroke(); });
+  monitorFrame = null;
+  setMonitorState(false);
+  const canvas = $('audioWaveform');
+  const draw = canvas.getContext('2d');
+  draw.clearRect(0, 0, canvas.width, canvas.height);
+  draw.strokeStyle = '#929b97';
+  draw.lineWidth = 1;
+  [58, 180].forEach(y => { draw.beginPath(); draw.moveTo(0, y); draw.lineTo(canvas.width, y); draw.stroke(); });
 }
 
 function startAudioMonitor(micAnalyser, clientAnalyser) {
-  const canvas = $('audioWaveform'); const draw = canvas.getContext('2d');
+  const canvas = $('audioWaveform');
+  const draw = canvas.getContext('2d');
   const micData = new Uint8Array(micAnalyser.frequencyBinCount);
   const clientData = new Uint8Array(clientAnalyser.frequencyBinCount);
-  const drawChannel = (data, top, color, indicatorId) => {
-    const bars = 36; const step = Math.floor(data.length / bars); let total = 0;
+  const drawChannel = (data, center, color, indicatorId) => {
+    const bars = 58;
+    const step = Math.max(1, Math.floor(data.length / bars));
+    let total = 0;
     draw.fillStyle = color;
-    for (let i = 0; i < bars; i++) {
-      const level = data[i * step] || 0; total += level;
-      const height = Math.max(2, (level / 255) * 47); const x = i * (canvas.width / bars) + 2;
-      draw.globalAlpha = .55 + (level / 255) * .45;
-      draw.fillRect(x, top + 48 - height, 10, height);
+    for (let index = 0; index < bars; index += 1) {
+      const level = data[index * step] || 0;
+      total += level;
+      const height = Math.max(3, (level / 255) * 50);
+      const x = index * (canvas.width / bars) + 2;
+      draw.fillRect(x, center - height, 10, height * 2);
     }
-    draw.globalAlpha = 1;
-    const speaking = total / bars > 8;
-    $(indicatorId).style.background = speaking ? color : '#3a494b';
-    $(indicatorId).style.boxShadow = speaking ? `0 0 12px ${color}` : 'none';
+    $(indicatorId).style.background = total / bars > 8 ? color : '#929b97';
   };
   const render = () => {
-    draw.fillStyle = '#0e0e0e'; draw.fillRect(0, 0, canvas.width, canvas.height);
-    micAnalyser.getByteFrequencyData(micData); clientAnalyser.getByteFrequencyData(clientData);
-    drawChannel(micData, 0, '#00f3ff', 'micIndicator');
-    drawChannel(clientData, 76, '#5a9dff', 'clientIndicator');
+    draw.fillStyle = '#e8ece9';
+    draw.fillRect(0, 0, canvas.width, canvas.height);
+    draw.strokeStyle = '#929b9777';
+    [58, 180].forEach(y => { draw.beginPath(); draw.moveTo(0, y); draw.lineTo(canvas.width, y); draw.stroke(); });
+    micAnalyser.getByteFrequencyData(micData);
+    clientAnalyser.getByteFrequencyData(clientData);
+    drawChannel(clientData, 58, '#080a09', 'clientIndicator');
+    drawChannel(micData, 180, '#89938f', 'micIndicator');
     monitorFrame = requestAnimationFrame(render);
   };
-  setMonitorState(true); render();
+  setMonitorState(true);
+  render();
 }
 
 async function start() {
+  let mic;
+  let desktop;
+  let context;
   try {
     clearPreviousRecord();
-    setMessage('Solicitando acesso ao microfone e ao áudio do computador...');
-    const mic = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: $('microphone').value ? { exact: $('microphone').value } : undefined } });
-    // getDisplayMedia ativa o loopback configurado no processo principal e inclui o áudio do sistema no Windows.
-    const desktop = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: { frameRate: 1 } });
-    if (!desktop.getAudioTracks().length) {
-      desktop.getTracks().forEach(track => track.stop());
-      mic.getTracks().forEach(track => track.stop());
-      throw new Error('O Windows não disponibilizou o áudio do sistema. Verifique se a chamada está saindo pelo dispositivo de áudio padrão.');
-    }
-    const context = new AudioContext();
+    setMessage('Solicitando acesso ao microfone e ao áudio do computador…');
+    mic = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: $('microphone').value ? { exact: $('microphone').value } : undefined } });
+    desktop = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: { frameRate: 1 } });
+    if (!desktop.getAudioTracks().length) throw new Error('O Windows não disponibilizou o áudio do sistema. Verifique a saída de áudio padrão.');
+    context = new AudioContext();
     const destination = context.createMediaStreamDestination();
     const micSource = context.createMediaStreamSource(mic);
     const clientSource = context.createMediaStreamSource(desktop);
-    const micAnalyser = context.createAnalyser(); const clientAnalyser = context.createAnalyser();
+    const micAnalyser = context.createAnalyser();
+    const clientAnalyser = context.createAnalyser();
     [micAnalyser, clientAnalyser].forEach(analyser => { analyser.fftSize = 256; analyser.smoothingTimeConstant = .78; });
-    micSource.connect(destination); clientSource.connect(destination);
-    micSource.connect(micAnalyser); clientSource.connect(clientAnalyser);
+    micSource.connect(destination);
+    clientSource.connect(destination);
+    micSource.connect(micAnalyser);
+    clientSource.connect(clientAnalyser);
     const startSegment = () => {
       segmentChunks = [];
       recorder = new MediaRecorder(destination.stream, { mimeType: 'audio/webm' });
@@ -209,63 +306,141 @@ async function start() {
       recorder.onstop = () => {
         const segment = new Blob(segmentChunks, { type: 'audio/webm' });
         if (segment.size) recordingSegments.push(segment);
-        if (recordingActive) startSegment();
-        else { stopAudioMonitor(); mic.getTracks().forEach(track => track.stop()); desktop.getTracks().forEach(track => track.stop()); context.close(); processAudioSegments(recordingSegments); }
+        if (recordingActive) {
+          startSegment();
+        } else {
+          stopAudioMonitor();
+          mic.getTracks().forEach(track => track.stop());
+          desktop.getTracks().forEach(track => track.stop());
+          context.close();
+          processAudioSegments(recordingSegments);
+        }
       };
       recorder.start(1000);
     };
-    recordingSegments = []; recordingActive = true; startSegment();
-    startedAt = Date.now(); timerId = setInterval(formatTime, 500);
+    recordingSegments = [];
+    recordingActive = true;
+    startSegment();
+    startedAt = Date.now();
+    timerId = setInterval(formatTime, 500);
     segmentTimer = setInterval(() => { if (recorder?.state === 'recording') recorder.stop(); }, SEGMENT_DURATION_MS);
+    $('activeEmail').textContent = $('clientEmail').value.trim() || 'CONTACTO NÃO IDENTIFICADO';
+    $('sessionId').textContent = `NT-${String(Date.now()).slice(-3)}-${String(Math.floor(Math.random() * 90) + 10)}`;
+    $('start').disabled = true;
+    $('stop').disabled = false;
+    setState('Gravando', true);
+    setLivePhase('recording');
+    setMessage('Gravação em andamento.');
     startAudioMonitor(micAnalyser, clientAnalyser);
-    $('start').disabled = true; $('stop').disabled = false; setState('Gravando', true); setMessage('Gravação em andamento.');
-  } catch (error) { stopAudioMonitor(); setState('Pronto para gravar'); setMessage(`Não foi possível iniciar: ${error.message}`); }
+  } catch (error) {
+    mic?.getTracks().forEach(track => track.stop());
+    desktop?.getTracks().forEach(track => track.stop());
+    context?.close();
+    stopAudioMonitor();
+    recordingActive = false;
+    $('start').disabled = false;
+    setState('Pronto para gravar');
+    setLivePhase('ready');
+    setMessage(`Não foi possível iniciar: ${error.message}`);
+  }
 }
 
 function stop() {
-  $('stop').disabled = true; clearInterval(timerId); clearInterval(segmentTimer); recordingActive = false; setState('Processando'); setMessage('Preparando as partes do atendimento para transcrição...'); recorder.stop();
+  if (!recordingActive || !recorder) return;
+  $('stop').disabled = true;
+  clearInterval(timerId);
+  clearInterval(segmentTimer);
+  recordingActive = false;
+  setState('Processando');
+  setLivePhase('processing');
+  setMessage('Preparando as partes do atendimento para transcrição…');
+  if (recorder.state !== 'inactive') recorder.stop();
 }
+
+function fillGeneratedRecord(record, transcript, message) {
+  $('title').value = record.title || '';
+  $('description').value = record.description || '';
+  $('resolutionDescription').value = record.resolutionDescription || '';
+  $('detailedDescription').value = record.detailedDescription || '';
+  $('tags').replaceChildren();
+  (record.tags || []).forEach(tag => addText($('tags'), 'span', 'tag', tag));
+  if (!(record.tags || []).length) addText($('tags'), 'span', 'tag', 'SEM TAGS');
+  $('transcript').textContent = transcript || '';
+  setState('Registro pronto');
+  setLivePhase('result');
+  setMessage(message || 'Revise os campos antes de copiar.');
+  $('resultHeading').focus?.();
+}
+
+window.applyGeneratedRecord = fillGeneratedRecord;
 
 async function processAudioSegments(blobs) {
   try {
-    setMessage(`Transcrevendo ${blobs.length} parte(s) e consolidando o atendimento...`);
+    setMessage(`Transcrevendo ${blobs.length} parte(s) e consolidando o atendimento…`);
     const segments = [];
-    for (const blob of blobs) segments.push({ audio: Array.from(new Uint8Array(await blob.arrayBuffer())), mimeType: blob.type });
+    for (const blob of blobs) {
+      segments.push({ audio: Array.from(new Uint8Array(await blob.arrayBuffer())), mimeType: blob.type });
+    }
     const data = await window.niggatron.generate({ segments });
-    $('title').value = data.record.title || '';
-    $('description').value = data.record.description || '';
-    $('resolutionDescription').value = data.record.resolutionDescription || '';
-    $('detailedDescription').value = data.record.detailedDescription || '';
-    $('tags').innerHTML = (data.record.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('') || '<span class="hint">Nenhuma tag sugerida</span>';
-    $('transcript').textContent = data.transcript || '';
     await window.niggatron.saveRecord({ ...data.record, clientEmail: $('clientEmail').value.trim(), transcript: data.transcript });
-    $('result').classList.remove('hidden'); setState('Registro pronto'); setMessage('Revise os campos antes de copiar.');
-  } catch (error) { setState('Erro'); setMessage(error.message || 'Não foi possível processar o atendimento.'); }
-  finally { $('start').disabled = false; }
+    fillGeneratedRecord(data.record, data.transcript);
+  } catch (error) {
+    setState('Erro');
+    setLivePhase('ready');
+    setMessage(error.message || 'Não foi possível processar o atendimento.');
+  } finally {
+    $('start').disabled = false;
+    $('headerStatus').textContent = 'SYSTEM / ONLINE';
+  }
 }
 
-$('liveNav').addEventListener('click', (event) => { event.preventDefault(); showView('live'); });
-$('historyNav').addEventListener('click', (event) => { event.preventDefault(); showView('history'); });
-$('encryptedNav').addEventListener('click', (event) => { event.preventDefault(); showView('encrypted'); });
-$('saveApiKey').addEventListener('click', saveApiKey);
+async function copyValue(value, confirmation) {
+  await navigator.clipboard.writeText(value || '');
+  setMessage(confirmation);
+}
+
+$('menuToggle').addEventListener('click', () => $('sideMenu').classList.contains('open') ? closeMenu() : openMenu());
+$('menuScrim').addEventListener('click', () => closeMenu());
+$('liveNav').addEventListener('click', event => { event.preventDefault(); showView('live'); });
+$('historyNav').addEventListener('click', event => { event.preventDefault(); showView('history'); });
+$('encryptedNav').addEventListener('click', event => { event.preventDefault(); showView('encrypted'); });
+$('microphone').addEventListener('change', updateInputLabel);
+$('saveApiKey').addEventListener('click', saveSettings);
 $('cancelDelete').addEventListener('click', closeDeleteModal);
+$('deleteModal').addEventListener('click', event => { if (event.target === $('deleteModal')) closeDeleteModal(); });
 $('confirmDelete').addEventListener('click', async () => {
   if (!pendingDeletion) return;
-  const { record, card } = pendingDeletion;
-  try { await window.niggatron.deleteRecord(record.id); closeDeleteModal(); playDeleteSound(); await disintegrate(card); loadHistory(); }
-  catch (error) { $('historyMessage').textContent = error.message || 'Não foi possível apagar o atendimento.'; closeDeleteModal(); }
+  const { record } = pendingDeletion;
+  $('confirmDelete').disabled = true;
+  try {
+    await window.niggatron.deleteRecord(record.id);
+    closeDeleteModal();
+    await loadHistory();
+  } catch (error) {
+    $('historyMessage').textContent = error.message || 'Não foi possível apagar o atendimento.';
+    closeDeleteModal();
+  } finally {
+    $('confirmDelete').disabled = false;
+  }
 });
 $('start').addEventListener('click', start);
 $('stop').addEventListener('click', stop);
-$('copyTitle').addEventListener('click', async () => { await navigator.clipboard.writeText($('title').value); setMessage('Título copiado.'); });
-$('copyDescription').addEventListener('click', async () => { await navigator.clipboard.writeText($('description').value); setMessage('Descrição copiada.'); });
-$('copyResolutionDescription').addEventListener('click', async () => { await navigator.clipboard.writeText($('resolutionDescription').value); setMessage('Descrição com resolução copiada.'); });
-$('copyDetailedDescription').addEventListener('click', async () => { await navigator.clipboard.writeText($('detailedDescription').value); setMessage('Descrição detalhada copiada.'); });
-$('copy').addEventListener('click', async () => {
-  const tags = [...document.querySelectorAll('.tag')].map(element => element.textContent).join(', ');
-  await navigator.clipboard.writeText(`E-mail do cliente: ${$('clientEmail').value}\nTítulo: ${$('title').value}\nTags: ${tags}\nDescrição: ${$('description').value}\nDescrição com resolução: ${$('resolutionDescription').value}\nDescrição mais detalhada: ${$('detailedDescription').value}`);
-  setMessage('Registro copiado.');
+$('finishResult').addEventListener('click', () => { clearPreviousRecord(); setLivePhase('ready'); setState('Pronto para gravar'); setMessage(''); $('clientEmail').focus(); });
+$('copyTitle').addEventListener('click', () => copyValue($('title').value, 'Título copiado.'));
+$('copyDescription').addEventListener('click', () => copyValue($('description').value, 'Descrição copiada.'));
+$('copyResolutionDescription').addEventListener('click', () => copyValue($('resolutionDescription').value, 'Descrição com resolução copiada.'));
+$('copyDetailedDescription').addEventListener('click', () => copyValue($('detailedDescription').value, 'Descrição detalhada copiada.'));
+$('copyTranscript').addEventListener('click', () => copyValue($('transcript').textContent, 'Transcrição copiada.'));
+$('copy').addEventListener('click', () => {
+  const tags = [...$('tags').querySelectorAll('.tag')].map(element => element.textContent).join(', ');
+  return copyValue(`E-mail do cliente: ${$('clientEmail').value}\nTítulo: ${$('title').value}\nTags: ${tags}\nDescrição: ${$('description').value}\nDescrição com resolução: ${$('resolutionDescription').value}\nDescrição mais detalhada: ${$('detailedDescription').value}`, 'Registro copiado.');
+});
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  if (!$('deleteModal').classList.contains('hidden')) closeDeleteModal();
+  else if ($('sideMenu').classList.contains('open')) closeMenu();
 });
 loadMicrophones();
+loadAppVersion();
 stopAudioMonitor();
-startBootSequence();
+setLivePhase('ready');

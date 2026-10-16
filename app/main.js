@@ -14,7 +14,7 @@ function createWindow() {
     height: 760,
     minWidth: 880,
     minHeight: 630,
-    backgroundColor: '#111827',
+    backgroundColor: '#d6dcda',
     icon: path.join(__dirname, 'renderer', 'assets', 'niggatron-logo.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
@@ -72,6 +72,9 @@ app.whenReady().then(() => {
   ipcMain.handle('desktop-source', async () => (await desktopCapturer.getSources({ types: ['screen'] }))[0]?.id);
   ipcMain.handle('api-key-status', () => fs.existsSync(apiKeyFile()));
   ipcMain.handle('save-api-key', (_event, value) => saveApiKey(value));
+  ipcMain.handle('groq-model', () => getGroqModel());
+  ipcMain.handle('save-groq-model', (_event, value) => saveGroqModel(value));
+  ipcMain.handle('app-version', () => app.getVersion());
   ipcMain.handle('save-record', (_event, record) => saveRecord(record));
   ipcMain.handle('list-records', () => listRecords());
   ipcMain.handle('delete-record', (_event, id) => deleteRecord(id));
@@ -101,9 +104,24 @@ app.on('before-quit', () => { isQuitting = true; });
 app.on('window-all-closed', () => { if (isQuitting && process.platform !== 'darwin') app.quit(); });
 
 const TAGS = ['API Oficial','Áudio','Automação','Botões/cmd','Bug','conexão','configurações','Disparos','Dúvidas','End Points','Financeiro','GHL','Grupos','instabilidade','Integração','Meta ADS Privacy','Migração','Notificação','Planos/Assinaturas','Proxy','Receptor','Restrição','Script','SDK','SMS','ST Chat','Stevo','Stevo Fusão','Stevo IA','Stevo Voice','Switch/Número De Referência','Toolkit','Transmissor','Webhook'];
+const GROQ_MODELS = new Set(['openai/gpt-oss-20b', 'openai/gpt-oss-120b']);
+const DEFAULT_GROQ_MODEL = 'openai/gpt-oss-20b';
 
 function apiKeyFile() { return path.join(app.getPath('userData'), 'niggatron-key.bin'); }
 function historyFile() { return path.join(app.getPath('userData'), 'niggatron-history.bin'); }
+function settingsFile() { return path.join(app.getPath('userData'), 'niggatron-settings.json'); }
+function getGroqModel() {
+  if (!fs.existsSync(settingsFile())) return DEFAULT_GROQ_MODEL;
+  try {
+    const model = JSON.parse(fs.readFileSync(settingsFile(), 'utf8')).groqModel;
+    return GROQ_MODELS.has(model) ? model : DEFAULT_GROQ_MODEL;
+  } catch { return DEFAULT_GROQ_MODEL; }
+}
+function saveGroqModel(value) {
+  if (!GROQ_MODELS.has(value)) throw new Error('Selecione um modelo Groq compatível.');
+  fs.writeFileSync(settingsFile(), JSON.stringify({ groqModel: value }), { encoding: 'utf8', mode: 0o600 });
+  return value;
+}
 function saveApiKey(value) {
   if (!value?.trim()) throw new Error('Informe uma chave da API Groq.');
   if (!safeStorage.isEncryptionAvailable()) throw new Error('A criptografia segura do Windows não está disponível neste computador.');
@@ -162,7 +180,7 @@ async function transcribeSegment(audio, mimeType, headers, index, total) {
 async function chatCompletion(headers, prompt, json = false) {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'openai/gpt-oss-20b', temperature: 0.15, messages: [{ role: 'user', content: prompt }], ...(json ? { response_format: { type: 'json_object' } } : {}) })
+    body: JSON.stringify({ model: getGroqModel(), temperature: 0.15, messages: [{ role: 'user', content: prompt }], ...(json ? { response_format: { type: 'json_object' } } : {}) })
   });
   if (!response.ok) throw new Error(`Resumo indisponível: ${await response.text()}`);
   return (await response.json()).choices[0].message.content;

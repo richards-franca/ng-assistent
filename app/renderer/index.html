@@ -1,73 +1,34 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>NiggaTron — Assistente de Suporte</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="updates.css">
-  <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Nigga Tron — Assistente de suporte</title>
+  <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="updates.css">
 </head>
 <body>
-  <div id="bootScreen" aria-label="Inicializando NiggaTron"><div class="boot-frame"><img src="assets/niggatron-logo.png" alt=""><p class="boot-kicker">NIGGATRON // VCR SYSTEM</p><h1>SUPPORT<br>TERMINAL</h1><p id="bootText">CARREGANDO MÓDULO DE ÁUDIO...</p><div class="boot-progress"><i></i></div><small>© 2026 // SIGNAL ACQUIRED</small></div></div>
-  <div class="scanlines"></div>
-  <div id="crtShell">
-  <header class="topbar">
-    <div class="topbar-content">
-      <div class="brand"><img src="assets/niggatron-logo.png" alt="Logo NiggaTron" style="width:42px;height:42px;object-fit:cover;border:1px solid #00f3ff;box-shadow:0 0 12px #00f3ff80"><span>NiggaTron</span><small>CORE v2.4.1 // TACTICAL INTERFACE</small></div>
-      <span class="topbar-label">ASSISTENTE DE SUPORTE</span>
-    </div>
+<div class="app-shell">
+  <header class="app-header">
+    <button id="menuToggle" class="brand-button" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sideMenu"><span class="brand-title">NIGGA TRON</span><span class="brand-meta">core <span id="brandVersion">v0.3.0</span> // tactical interface</span><span id="viewSubtitle" class="brand-subtitle">// assistente de suporte</span></button>
+    <div class="system-state" aria-label="Sistema online"><svg class="orbit-mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18"></circle><path d="M7 20c7-11 19-11 26 0-7 11-19 11-26 0Zm13-12v24"></path></svg><strong id="headerStatus">SYSTEM / ONLINE</strong></div>
   </header>
-  <main>
-    <section id="liveView" class="view">
-      <section class="page-heading"><p>&gt; ASSISTENTE DE SUPORTE</p><h1>NiggaTron</h1><span>Grave, revise e registre cada atendimento com agilidade.</span></section>
-      <section class="panel config-panel">
-        <i class="brackets"></i><div class="config-grid single-config">
-          <label><b>&gt; MICROFONE</b><select id="microphone" class="tech-input"><option>Carregando...</option></select></label>
-        </div>
-      </section>
-      <section class="panel recording-panel">
-      <i class="brackets"></i><div class="arc"></div>
-      <div class="recording-content"><div><h2>Atendimento <span id="state" class="status-pill">Pronto para gravar</span></h2><label style="position:relative;z-index:75;max-width:360px;margin:0 0 14px;pointer-events:auto"><b>&gt; E-MAIL DO CLIENTE</b><input id="clientEmail" class="tech-input" type="email" placeholder="cliente@empresa.com" autocomplete="email" spellcheck="false" style="position:relative;z-index:76;pointer-events:auto"></label><p id="timer">00:00</p><span class="help-text">A gravação combina o seu microfone e o áudio do computador. Avise o cliente sobre a gravação conforme a política da empresa.</span></div>
-      <div class="audio-monitor" style="width:300px;min-width:300px;border:1px solid #3a494b;background:#0e0e0eb8;padding:13px 14px;box-shadow:inset 0 0 24px #00f3ff0d"><div style="display:flex;justify-content:space-between;margin-bottom:9px;color:#b9cacb;font:700 10px 'JetBrains Mono'">SINAL DE ÁUDIO <span id="audioMonitorState" style="color:#849495">AGUARDANDO</span></div><div style="display:flex;gap:13px;margin-bottom:7px;font:500 10px 'JetBrains Mono'"><span style="color:#00f3ff"><i id="micIndicator" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#3a494b"></i> SUA VOZ</span><span style="color:#5a9dff"><i id="clientIndicator" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#3a494b"></i> CLIENTE</span></div><canvas id="audioWaveform" width="540" height="150" style="display:block;width:270px;height:75px"></canvas></div>
-      <div class="actions"><button id="start" class="start-button"><iconify-icon icon="pixelarticons:microphone"></iconify-icon>Iniciar gravação</button><button id="stop" class="stop-button" disabled><iconify-icon icon="pixelarticons:close"></iconify-icon>Finalizar e gerar</button></div></div>
-      </section>
-      <p id="message" class="message" role="status"></p>
-      <section id="result" class="results hidden">
-      <p class="review-note">Revise os campos antes de copiar.</p>
-      <div class="panel result-panel"><i class="brackets"></i>
-        <label><span class="field-heading" style="display:flex;align-items:center;justify-content:space-between"><b>&gt; TÍTULO</b><button id="copyTitle" class="copy-field" style="border:0;background:transparent;color:#00f3ff;font-size:11px;padding:0" title="Copiar título"><iconify-icon icon="pixelarticons:copy"></iconify-icon> Copiar</button></span><input id="title" class="tech-input"></label>
-        <label><b>&gt; TAGS</b><div id="tags" class="tags"></div></label>
-        <label><span class="field-heading" style="display:flex;align-items:center;justify-content:space-between"><b>&gt; DESCRIÇÃO</b><button id="copyDescription" class="copy-field" style="border:0;background:transparent;color:#00f3ff;font-size:11px;padding:0" title="Copiar descrição"><iconify-icon icon="pixelarticons:copy"></iconify-icon> Copiar</button></span><textarea id="description" class="tech-input" rows="3"></textarea></label>
-        <label><span class="field-heading" style="display:flex;align-items:center;justify-content:space-between"><b>&gt; DESCRIÇÃO COM RESOLUÇÃO</b><button id="copyResolutionDescription" class="copy-field" style="border:0;background:transparent;color:#00f3ff;font-size:11px;padding:0" title="Copiar descrição com resolução"><iconify-icon icon="pixelarticons:copy"></iconify-icon> Copiar</button></span><textarea id="resolutionDescription" class="tech-input" rows="3"></textarea></label>
-        <label><span class="field-heading" style="display:flex;align-items:center;justify-content:space-between"><b>&gt; DESCRIÇÃO MAIS DETALHADA</b><button id="copyDetailedDescription" class="copy-field" style="border:0;background:transparent;color:#00f3ff;font-size:11px;padding:0" title="Copiar descrição detalhada"><iconify-icon icon="pixelarticons:copy"></iconify-icon> Copiar</button></span><textarea id="detailedDescription" class="tech-input" rows="4"></textarea></label>
-        <button id="copy" class="copy-button"><iconify-icon icon="pixelarticons:copy"></iconify-icon>Copiar registro</button>
+  <main id="mainContent" tabindex="-1">
+    <section id="liveView" class="view" aria-labelledby="liveHeading">
+      <h1 id="liveHeading" class="section-index">01 / SESSION INITIALIZATION</h1>
+      <div id="captureLayout" class="capture-layout">
+        <section class="panel identity-panel" aria-labelledby="identityHeading"><h2 id="identityHeading">IDENTIFY OPERATOR</h2><label for="clientEmail">EMAIL ADDRESS</label><input id="clientEmail" class="field" type="email" placeholder="operator@company.com" autocomplete="email" spellcheck="false"><label for="microphone">SYSTEM MICROPHONE</label><select id="microphone" class="field"><option value="">Carregando microfones…</option></select><button id="start" class="button button-dark" type="button">INICIAR ATENDIMENTO</button></section>
+        <section id="captureConsole" class="capture-console" aria-labelledby="captureHeading"><h2 id="captureHeading">02 / AUDIO CAPTURE</h2><div class="console-rule"></div><p id="timer" class="timer">00:00</p><p class="capture-state"><span id="captureDot" class="status-dot"></span><span id="state">PRONTO PARA GRAVAR</span></p><p id="inputSource" class="console-note">INPUT: SYSTEM MICROPHONE</p><button id="stop" class="button button-console" type="button" disabled>FINALIZAR GRAVAÇÃO</button></section>
       </div>
-      <details class="panel transcript"><summary>&gt; VER TRANSCRIÇÃO</summary><p id="transcript"></p></details>
-      </section>
+      <section id="activeCapture" class="active-capture hidden" aria-labelledby="activeCaptureHeading"><div class="session-card"><div><span>CLIENTE / CONTACTO IDENTIFICADO</span><strong id="activeEmail">—</strong></div><div><span>SESSION ID</span><strong id="sessionId">NT-000-00</strong></div></div><h2 id="activeCaptureHeading" class="section-index">03 / AUDIO CAPTURE // DUPLEX SIGNAL</h2><div class="wave-panel"><div class="wave-label">CLIENTE <i id="clientIndicator"></i></div><div class="wave-label wave-label-operator">VOCÊ <i id="micIndicator"></i></div><canvas id="audioWaveform" width="1200" height="240" aria-label="Monitor visual do áudio do cliente e do operador"></canvas><span id="audioMonitorState" class="sr-only">AGUARDANDO</span></div></section>
+      <section id="processing" class="processing hidden" aria-live="assertive"><div class="processing-card"><p>SESSION COMPLETE / 04</p><div class="console-rule"></div><div class="processing-row"><div><h2>GUARDANDO E TRANSCREVENDO<br>ATENDIMENTO</h2><span>PLEASE KEEP THIS WINDOW OPEN</span></div><span class="loader" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span></div></div></section>
+      <p id="message" class="message" role="status" aria-live="polite"></p>
+      <section id="result" class="result hidden" aria-labelledby="resultHeading"><h2 id="resultHeading" class="section-index">04 / ATENDIMENTO TRANSCRITO</h2><div class="result-card"><div class="result-field result-title"><label for="title">TÍTULO</label><input id="title" class="plain-input"><button id="copyTitle" class="button button-dark button-copy" type="button"><span aria-hidden="true">▣</span> COPIAR TÍTULO</button></div><div class="result-field"><label for="description">DESCRIÇÃO</label><textarea id="description" class="plain-input" rows="2"></textarea><button id="copyDescription" class="button button-outline button-copy" type="button"><span aria-hidden="true">▣</span> COPIAR</button></div><details class="more-fields"><summary>EXIBIR REGISTRO COMPLETO</summary><div class="detail-grid"><label for="resolutionDescription">DESCRIÇÃO COM RESOLUÇÃO</label><textarea id="resolutionDescription" class="field" rows="3"></textarea><button id="copyResolutionDescription" class="button button-outline" type="button">COPIAR RESOLUÇÃO</button><label for="detailedDescription">DESCRIÇÃO MAIS DETALHADA</label><textarea id="detailedDescription" class="field" rows="4"></textarea><button id="copyDetailedDescription" class="button button-outline" type="button">COPIAR DETALHES</button><div><span class="field-label">TAGS</span><div id="tags" class="tags"></div></div><button id="copy" class="button button-dark" type="button">COPIAR REGISTRO</button></div></details></div><h3>TRANSCRIÇÃO DO ATENDIMENTO</h3><div class="transcript-card"><p id="transcript"></p><button id="copyTranscript" class="button button-dark button-copy" type="button"><span aria-hidden="true">▣</span> COPIAR</button></div></section>
+      <footer class="view-footer"><strong id="footerPrimary">CAUTION — AUDIO TRANSCRIPTS ARE HANDLED IN A SECURE SESSION.</strong><span id="footerSecondary">VERIFY CONTACT ID BEFORE STARTING LIVE SUPPORT.</span><button id="finishResult" class="button button-dark hidden" type="button">CONCLUÍDO</button></footer>
     </section>
-    <section id="encryptedView" class="view hidden">
-      <section class="page-heading"><p>&gt; CONFIGURAÇÃO SEGURA</p><h1>Encrypted</h1><span>Defina a chave usada para transcrever e resumir os atendimentos.</span></section>
-      <section class="panel secure-panel"><i class="brackets"></i>
-        <p class="secure-status" id="apiKeyStatus">Verificando armazenamento seguro...</p>
-        <label><b>&gt; CHAVE DA API GROQ</b><input id="savedApiKey" class="tech-input" type="password" placeholder="gsk_..." autocomplete="off"><small>A chave é protegida pela criptografia do Windows e fica disponível somente para este aplicativo neste computador.</small></label>
-        <button id="saveApiKey" class="copy-button">Salvar chave com segurança</button>
-        <div class="update-panel"><div><b>&gt; ATUALIZAÇÕES DO SISTEMA</b><p id="updateStatus">Verifique se há uma versão mais recente do NiggaTron.</p></div><button id="checkUpdates" class="stop-button">VERIFICAR ATUALIZAÇÕES</button><button id="installUpdate" class="copy-button hidden">REINICIAR E ATUALIZAR</button></div>
-      </section>
-    </section>
-    <section id="historyView" class="view hidden">
-      <section class="page-heading"><p>&gt; ARQUIVO LOCAL</p><h1>Atendimentos</h1><span>Histórico seguro dos atendimentos gerados pelo NiggaTron.</span></section>
-      <p id="historyMessage" class="message"></p>
-      <section id="historyList" class="history-list"></section>
-    </section>
+    <section id="historyView" class="view hidden" aria-labelledby="historyHeading"><header class="view-title"><h1 id="historyHeading">ATENDIMENTOS</h1><p>HISTÓRICO DE SESSÕES // <span id="historyCount">00 REGISTROS</span></p></header><p id="historyMessage" class="message" role="status"></p><div id="historyList" class="history-list"></div><footer class="archive-footer">ARCHIVE / SESSION RECORDS RETAINED SECURELY</footer></section>
+    <section id="encryptedView" class="view hidden" aria-labelledby="settingsHeading"><h1 id="settingsHeading" class="section-index">03 / SYSTEM CONFIGURATION</h1><div class="settings-layout"><section class="panel settings-card" aria-labelledby="groqHeading"><h2 id="groqHeading">GROQ ACCESS NODE</h2><p>CONFIGURE MODEL INFERENCE CREDENTIALS</p><div class="panel-rule"></div><label for="savedApiKey">GROQ API KEY</label><input id="savedApiKey" class="field" type="password" placeholder="gsk_••••••••••••••••••••" autocomplete="off"><small id="apiKeyStatus">Verificando armazenamento seguro…</small><label for="groqModel">INFERENCE MODEL</label><select id="groqModel" class="field"><option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option><option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option></select><button id="saveApiKey" class="button button-dark" type="button">SALVAR CONFIGURAÇÕES COM SEGURANÇA</button><small>PROTOCOL: AES-256 / KEYCHAIN</small></section><section class="updates-card" aria-labelledby="updatesHeading"><p>SYSTEM MAINTENANCE</p><h2 id="updatesHeading">UPDATES</h2><div class="console-rule"></div><strong class="update-channel"><i></i> CHANNEL STABLE</strong><span>CURRENT BUILD</span><b id="currentBuild">v0.3.0</b><span id="updateStatus">Pronto para verificar atualizações.</span><button id="checkUpdates" class="button button-light" type="button">VERIFICAR ATUALIZAÇÕES</button><button id="installUpdate" class="button button-light hidden" type="button">REINICIAR E ATUALIZAR</button><small>AUTO-CHECK: ENABLED</small></section></div><footer class="view-footer"><strong>CONFIGURATION CHANGES ARE LOGGED TO THE SECURE LOCAL SESSION.</strong><span>NT-SET/03</span></footer></section>
   </main>
-  <footer><span>© 2026 NIGGATRON CORE v2.4.1 // TACTICAL INTERFACE</span><div><a href="#">Privacy Policy</a><a href="#">Terminal Access</a><a href="#">API Docs</a></div></footer>
-  </div>
-  <aside class="sidenav">
-    <nav><a id="liveNav" class="selected" href="#live"><iconify-icon icon="pixelarticons:cast"></iconify-icon><span>Central</span></a><a id="historyNav" href="#history"><iconify-icon icon="pixelarticons:archive"></iconify-icon><span>Atendimentos</span></a><a id="encryptedNav" href="#encrypted"><iconify-icon icon="pixelarticons:lock"></iconify-icon><span>Encrypted</span></a></nav>
-  </aside>
-  <div id="deleteModal" class="delete-modal hidden" role="dialog" aria-modal="true" aria-labelledby="deleteTitle"><div class="delete-dialog"><p class="warning-label">⚠ WARNING // PURGE RECORD</p><h2 id="deleteTitle">APAGAR ATENDIMENTO?</h2><p id="deleteMessage">Esta ação remove o registro do arquivo local.</p><div class="delete-actions"><button id="cancelDelete" class="stop-button">CANCELAR</button><button id="confirmDelete" class="nuke-button"><span class="pixel-explosion" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>SIM, ELIMINAR</button></div></div></div>
-  <script src="renderer.js"></script>
-  <script src="updates.js"></script>
-</body>
-</html>
+  <aside id="sideMenu" class="side-menu" aria-hidden="true"><div class="side-menu-inner"><p>NAVIGATION / 03</p><h2>COMMAND INDEX</h2><nav aria-label="Navegação principal"><a id="liveNav" class="selected" href="#live"><span>01</span>INÍCIO</a><a id="historyNav" href="#history"><span>02</span>ATENDIMENTOS</a><a id="encryptedNav" href="#encrypted"><span>03</span>CONFIGURAÇÕES</a></nav><div class="menu-footer"><span>ESC / CLOSE PANEL</span><strong><i></i> SYSTEM ONLINE</strong></div></div></aside><button id="menuScrim" class="menu-scrim hidden" type="button" aria-label="Fechar menu"></button>
+</div>
+<div id="deleteModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="deleteTitle" aria-describedby="deleteMessage"><div class="modal-card"><p>ARCHIVE / DELETE RECORD</p><h2 id="deleteTitle">APAGAR ATENDIMENTO?</h2><p id="deleteMessage">Esta ação remove o registro do arquivo local.</p><div><button id="cancelDelete" class="button button-outline" type="button">CANCELAR</button><button id="confirmDelete" class="button button-dark" type="button">APAGAR REGISTRO</button></div></div></div>
+<script src="renderer.js"></script><script src="updates.js"></script>
+</body></html>

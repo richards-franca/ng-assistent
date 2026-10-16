@@ -3,21 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>NiggaTron — Gravador rápido</title>
+  <title>Nigga Tron — Gravador rápido</title>
   <link rel="stylesheet" href="quick-recorder.css">
   <link rel="stylesheet" href="quick-recorder-controls.css">
 </head>
 <body>
   <main class="quick-shell">
-    <div class="topline"><span>◉ NIGGATRON</span><b id="mode">AGUARDANDO...</b><div class="window-controls"><button id="shrink" title="Diminuir painel" aria-label="Diminuir painel">−</button><button id="grow" title="Aumentar painel" aria-label="Aumentar painel">+</button><button id="quit" title="Fechar NiggaTron" aria-label="Fechar NiggaTron">×</button></div></div>
-    <img src="assets/quick-recorder-bot.png" alt="Mascote NiggaTron" class="bot">
-    <section class="content">
-      <p class="label">&gt; GRAVAÇÃO RÁPIDA</p>
-      <p id="timer">00:00</p>
-      <input id="clientEmail" type="email" placeholder="e-mail do cliente (opcional)" autocomplete="email">
-      <p id="message">Pronto para capturar o atendimento.</p>
+    <header class="topline">
+      <div class="quick-brand">
+        <strong>NIGGA TRON</strong>
+        <span>// QUICK CAPTURE</span>
+      </div>
+      <div class="window-controls" aria-label="Controles da janela">
+        <button id="shrink" type="button" title="Diminuir painel" aria-label="Diminuir painel">−</button>
+        <button id="grow" type="button" title="Aumentar painel" aria-label="Aumentar painel">+</button>
+        <button id="quit" type="button" title="Fechar Nigga Tron" aria-label="Fechar Nigga Tron">×</button>
+      </div>
+    </header>
+
+    <section class="capture-console" aria-labelledby="quickHeading">
+      <div class="console-heading">
+        <p id="quickHeading">01 / AUDIO CAPTURE</p>
+        <b id="mode">AGUARDANDO...</b>
+      </div>
+      <div class="console-rule"></div>
+
+      <p id="timer" aria-label="Tempo da gravação">00:00</p>
+      <p class="capture-state"><span aria-hidden="true"></span> PRONTO PARA GRAVAR</p>
+
+      <label for="clientEmail">EMAIL DO CLIENTE / OPCIONAL</label>
+      <input id="clientEmail" type="email" placeholder="cliente@empresa.com" autocomplete="email" spellcheck="false">
+      <p id="message" role="status" aria-live="polite">Pronto para capturar o atendimento.</p>
     </section>
-    <div class="actions"><button id="start">● INICIAR</button><button id="stop" disabled>■ FINALIZAR</button></div>
+
+    <div class="actions">
+      <button id="start" type="button">INICIAR CAPTURA</button>
+      <button id="stop" type="button" disabled>FINALIZAR GRAVAÇÃO</button>
+    </div>
+
+    <footer>
+      <span>SECURE LOCAL SESSION</span>
+      <strong>NT-QC/01</strong>
+    </footer>
   </main>
   <script src="quick-recorder.js"></script>
 </body>

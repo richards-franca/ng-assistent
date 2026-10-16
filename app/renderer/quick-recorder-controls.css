@@ -1,5 +1,20 @@
-.topline{padding:12px 86px 12px 15px!important;-webkit-app-region:drag}
-.window-controls{position:absolute;top:5px;right:6px;display:flex;gap:2px;-webkit-app-region:no-drag}
-.window-controls button{width:24px;height:24px;border:1px solid #593144;background:#1b1b24;color:#f0dfba;font:18px VT323;line-height:1;cursor:pointer}
-.window-controls button:hover{border-color:#46d7df;color:#46d7df}.window-controls #quit:hover{border-color:#ff3976;color:#ff8aa8}
-.content input,.actions{-webkit-app-region:no-drag}
+.topline{-webkit-app-region:drag}
+.window-controls{display:flex;flex:none;gap:4px;-webkit-app-region:no-drag}
+.window-controls button{
+  display:grid;
+  width:27px;
+  height:27px;
+  place-items:center;
+  border:2px solid var(--ink);
+  border-radius:0;
+  background:transparent;
+  color:var(--ink);
+  padding:0;
+  font-size:16px;
+  font-weight:900;
+  line-height:1;
+  cursor:pointer;
+}
+.window-controls button:hover,.window-controls button:focus-visible{background:var(--ink);color:var(--paper);outline:0}
+.window-controls #quit:hover,.window-controls #quit:focus-visible{background:var(--ink);color:var(--paper)}
+.capture-console input,.actions{-webkit-app-region:no-drag}

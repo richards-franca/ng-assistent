@@ -1,6 +1,6 @@
 {
   "name": "niggatron",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Assistente local para resumir atendimentos de suporte",
   "main": "main.js",
   "scripts": {
