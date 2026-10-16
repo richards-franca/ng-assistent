@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>NiggaTron — Gravador rápido</title>
+  <link rel="stylesheet" href="quick-recorder.css">
+  <link rel="stylesheet" href="quick-recorder-controls.css">
+</head>
+<body>
+  <main class="quick-shell">
+    <div class="topline"><span>◉ NIGGATRON</span><b id="mode">AGUARDANDO...</b><div class="window-controls"><button id="shrink" title="Diminuir painel" aria-label="Diminuir painel">−</button><button id="grow" title="Aumentar painel" aria-label="Aumentar painel">+</button><button id="quit" title="Fechar NiggaTron" aria-label="Fechar NiggaTron">×</button></div></div>
+    <img src="assets/quick-recorder-bot.png" alt="Mascote NiggaTron" class="bot">
+    <section class="content">
+      <p class="label">&gt; GRAVAÇÃO RÁPIDA</p>
+      <p id="timer">00:00</p>
+      <input id="clientEmail" type="email" placeholder="e-mail do cliente (opcional)" autocomplete="email">
+      <p id="message">Pronto para capturar o atendimento.</p>
+    </section>
+    <div class="actions"><button id="start">● INICIAR</button><button id="stop" disabled>■ FINALIZAR</button></div>
+  </main>
+  <script src="quick-recorder.js"></script>
+</body>
+</html>

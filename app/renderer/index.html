@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>NiggaTron — Assistente de Suporte</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="updates.css">
+  <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
+</head>
+<body>
+  <div id="bootScreen" aria-label="Inicializando NiggaTron"><div class="boot-frame"><img src="assets/niggatron-logo.png" alt=""><p class="boot-kicker">NIGGATRON // VCR SYSTEM</p><h1>SUPPORT<br>TERMINAL</h1><p id="bootText">CARREGANDO MÓDULO DE ÁUDIO...</p><div class="boot-progress"><i></i></div><small>© 2026 // SIGNAL ACQUIRED</small></div></div>
+  <div class="scanlines"></div>
+  <div id="crtShell">
+  <header class="topbar">
+    <div class="topbar-content">
+      <div class="brand"><img src="assets/niggatron-logo.png" alt="Logo NiggaTron" style="width:42px;height:42px;object-fit:cover;border:1px solid #00f3ff;box-shadow:0 0 12px #00f3ff80"><span>NiggaTron</span><small>CORE v2.4.1 // TACTICAL INTERFACE</small></div>
+      <span class="topbar-label">ASSISTENTE DE SUPORTE</span>
+    </div>
+  </header>
+  <main>
+    <section id="liveView" class="view">
+      <section class="page-heading"><p>&gt; ASSISTENTE DE SUPORTE</p><h1>NiggaTron</h1><span>Grave, revise e registre cada atendimento com agilidade.</span></section>
+      <section class="panel config-panel">
+        <i class="brackets"></i><div class="config-grid single-config">
+          <label><b>&gt; MICROFONE</b><select id="microphone" class="tech-input"><option>Carregando...</option></select></label>
+        </div>
+      </section>
+      <section class="panel recording-panel">
+      <i class="brackets"></i><div class="arc"></div>
+      <div class="recording-content"><div><h2>Atendimento <span id="state" class="status-pill">Pronto para gravar</span></h2><label style="position:relative;z-index:75;max-width:360px;margin:0 0 14px;pointer-events:auto"><b>&gt; E-MAIL DO CLIENTE</b><input id="clientEmail" class="tech-input" type="email" placeholder="cliente@empresa.com" autocomplete="email" spellcheck="false" style="position:relative;z-index:76;pointer-events:auto"></label><p id="timer">00:00</p><span class="help-text">A gravação combina o seu microfone e o áudio do computador. Avise o cliente sobre a gravação conforme a política da empresa.</span></div>
+      <div class="audio-monitor" style="width:300px;min-width:300px;border:1px solid #3a494b;background:#0e0e0eb8;padding:13px 14px;box-shadow:inset 0 0 24px #00f3ff0d"><div style="display:flex;justify-content:space-between;margin-bottom:9px;color:#b9cacb;font:700 10px 'JetBrains Mono'">SINAL DE ÁUDIO <span id="audioMonitorState" style="color:#849495">AGUARDANDO</span></div><div style="display:flex;gap:13px;margin-bottom:7px;font:500 10px 'JetBrains Mono'"><span style="color:#00f3ff"><i id="micIndicator" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#3a494b"></i> SUA VOZ</span><span style="color:#5a9dff"><i id="clientIndicator" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#3a494b"></i> CLIENTE</span></div><canvas id="audioWaveform" width="540" height="150" style="display:block;width:270px;height:75px"></canvas></div>
+      <div class="actions"><button id="start" class="start-button"><iconify-icon icon="pixelarticons:microphone"></iconify-icon>Iniciar gravação</button><button id="stop" class="stop-button" disabled><iconify-icon icon="pixelarticons:close"></iconify-icon>Finalizar e gerar</button></div></div>
+      </section>
+      <p id="message" class="message" role="status"></p>
+      <section id="result" class="results hidden">
+      <p class="review-note">Revise os campos antes de copiar.</p>
+      <div class="panel result-panel"><i class="brackets"></i>
+        <label><span class="field-heading" style="display:flex;align-items:center;justify-content:space-between"><b>&gt; TÍTULO</b><button id="copyTitle" class="copy-field" style="border:0;background:transparent;color:#00f3ff;font-size:11px;padding:0" title="Copiar título"><iconify-icon icon="pixelarticons:copy"></iconify-icon> Copiar</button></span><input id="title" class="tech-input"></label>
+        <label><b>&gt; TAGS</b><div id="tags" class="tags"></div></label>
+        <label><span class="field-heading" style="display:flex;align-items:center;justify-content:space-between"><b>&gt; DESCRIÇÃO</b><button id="copyDescription" class="copy-field" style="border:0;background:transparent;color:#00f3ff;font-size:11px;padding:0" title="Copiar descrição"><iconify-icon icon="pixelarticons:copy"></iconify-icon> Copiar</button></span><textarea id="description" class="tech-input" rows="3"></textarea></label>
+        <label><span class="field-heading" style="display:flex;align-items:center;justify-content:space-between"><b>&gt; DESCRIÇÃO COM RESOLUÇÃO</b><button id="copyResolutionDescription" class="copy-field" style="border:0;background:transparent;color:#00f3ff;font-size:11px;padding:0" title="Copiar descrição com resolução"><iconify-icon icon="pixelarticons:copy"></iconify-icon> Copiar</button></span><textarea id="resolutionDescription" class="tech-input" rows="3"></textarea></label>
+        <label><span class="field-heading" style="display:flex;align-items:center;justify-content:space-between"><b>&gt; DESCRIÇÃO MAIS DETALHADA</b><button id="copyDetailedDescription" class="copy-field" style="border:0;background:transparent;color:#00f3ff;font-size:11px;padding:0" title="Copiar descrição detalhada"><iconify-icon icon="pixelarticons:copy"></iconify-icon> Copiar</button></span><textarea id="detailedDescription" class="tech-input" rows="4"></textarea></label>
+        <button id="copy" class="copy-button"><iconify-icon icon="pixelarticons:copy"></iconify-icon>Copiar registro</button>
+      </div>
+      <details class="panel transcript"><summary>&gt; VER TRANSCRIÇÃO</summary><p id="transcript"></p></details>
+      </section>
+    </section>
+    <section id="encryptedView" class="view hidden">
+      <section class="page-heading"><p>&gt; CONFIGURAÇÃO SEGURA</p><h1>Encrypted</h1><span>Defina a chave usada para transcrever e resumir os atendimentos.</span></section>
+      <section class="panel secure-panel"><i class="brackets"></i>
+        <p class="secure-status" id="apiKeyStatus">Verificando armazenamento seguro...</p>
+        <label><b>&gt; CHAVE DA API GROQ</b><input id="savedApiKey" class="tech-input" type="password" placeholder="gsk_..." autocomplete="off"><small>A chave é protegida pela criptografia do Windows e fica disponível somente para este aplicativo neste computador.</small></label>
+        <button id="saveApiKey" class="copy-button">Salvar chave com segurança</button>
+        <div class="update-panel"><div><b>&gt; ATUALIZAÇÕES DO SISTEMA</b><p id="updateStatus">Verifique se há uma versão mais recente do NiggaTron.</p></div><button id="checkUpdates" class="stop-button">VERIFICAR ATUALIZAÇÕES</button><button id="installUpdate" class="copy-button hidden">REINICIAR E ATUALIZAR</button></div>
+      </section>
+    </section>
+    <section id="historyView" class="view hidden">
+      <section class="page-heading"><p>&gt; ARQUIVO LOCAL</p><h1>Atendimentos</h1><span>Histórico seguro dos atendimentos gerados pelo NiggaTron.</span></section>
+      <p id="historyMessage" class="message"></p>
+      <section id="historyList" class="history-list"></section>
+    </section>
+  </main>
+  <footer><span>© 2026 NIGGATRON CORE v2.4.1 // TACTICAL INTERFACE</span><div><a href="#">Privacy Policy</a><a href="#">Terminal Access</a><a href="#">API Docs</a></div></footer>
+  </div>
+  <aside class="sidenav">
+    <nav><a id="liveNav" class="selected" href="#live"><iconify-icon icon="pixelarticons:cast"></iconify-icon><span>Central</span></a><a id="historyNav" href="#history"><iconify-icon icon="pixelarticons:archive"></iconify-icon><span>Atendimentos</span></a><a id="encryptedNav" href="#encrypted"><iconify-icon icon="pixelarticons:lock"></iconify-icon><span>Encrypted</span></a></nav>
+  </aside>
+  <div id="deleteModal" class="delete-modal hidden" role="dialog" aria-modal="true" aria-labelledby="deleteTitle"><div class="delete-dialog"><p class="warning-label">⚠ WARNING // PURGE RECORD</p><h2 id="deleteTitle">APAGAR ATENDIMENTO?</h2><p id="deleteMessage">Esta ação remove o registro do arquivo local.</p><div class="delete-actions"><button id="cancelDelete" class="stop-button">CANCELAR</button><button id="confirmDelete" class="nuke-button"><span class="pixel-explosion" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>SIM, ELIMINAR</button></div></div></div>
+  <script src="renderer.js"></script>
+  <script src="updates.js"></script>
+</body>
+</html>

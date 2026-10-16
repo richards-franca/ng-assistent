@@ -40,7 +40,7 @@ Tudo foi pensado para reduzir a tarefa manual de anotar contexto, problema e res
 
 ## Instalação
 
-1. Baixe o arquivo `NiggaTron-Setup-0.1.0.exe` [Por aqui nesse site](https://bevly0101.github.io/niggatron/).
+1. Baixe o instalador mais recente na [página de releases](https://github.com/richards-franca/ng-assistent/releases/latest).
 2. Execute o instalador.
 3. Escolha a pasta de instalação e conclua o assistente.
 4. Abra o **NiggaTron** pelo Menu Iniciar ou atalho da área de trabalho.

@@ -1,0 +1,5 @@
+.topline{padding:12px 86px 12px 15px!important;-webkit-app-region:drag}
+.window-controls{position:absolute;top:5px;right:6px;display:flex;gap:2px;-webkit-app-region:no-drag}
+.window-controls button{width:24px;height:24px;border:1px solid #593144;background:#1b1b24;color:#f0dfba;font:18px VT323;line-height:1;cursor:pointer}
+.window-controls button:hover{border-color:#46d7df;color:#46d7df}.window-controls #quit:hover{border-color:#ff3976;color:#ff8aa8}
+.content input,.actions{-webkit-app-region:no-drag}

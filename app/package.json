@@ -1,0 +1,46 @@
+{
+  "name": "niggatron",
+  "version": "0.2.2",
+  "description": "Assistente local para resumir atendimentos de suporte",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.niggatron.support",
+    "productName": "NiggaTron",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "NiggaTron"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "richards-franca",
+        "repo": "ng-assistent"
+      }
+    ],
+    "artifactName": "NiggaTron-Setup-${version}.${ext}"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}
