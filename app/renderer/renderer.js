@@ -403,6 +403,8 @@ async function copyValue(value, confirmation) {
 }
 
 $('menuToggle').addEventListener('click', () => $('sideMenu').classList.contains('open') ? closeMenu() : openMenu());
+$('menuEdge').addEventListener('pointerenter', openMenu);
+$('sideMenu').addEventListener('pointerleave', () => closeMenu(false));
 $('menuScrim').addEventListener('click', () => closeMenu());
 $('liveNav').addEventListener('click', event => { event.preventDefault(); showView('live'); });
 $('historyNav').addEventListener('click', event => { event.preventDefault(); showView('history'); });
