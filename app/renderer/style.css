@@ -48,7 +48,7 @@ textarea.field{resize:vertical}
 .wave-panel canvas{position:absolute;inset:38px 40px 20px;width:calc(100% - 80px);height:220px}
 .wave-label{position:absolute;z-index:2;top:24px;left:26px;font-size:12px;font-weight:900}.wave-label-operator{top:151px;color:var(--muted)}
 .wave-label i{display:inline-block;width:8px;height:8px;margin-left:6px;border-radius:50%;background:var(--soft)}
-.active-capture .section-index{margin-top:0}.active-capture{padding-top:0}
+.active-capture .section-index{margin-top:0}.active-capture{padding-top:0}.active-actions{display:flex;justify-content:flex-end;margin-top:16px}.active-actions .button{min-width:260px}
 .processing{display:grid;min-height:410px;place-items:center}
 .processing-card{width:min(740px,75vw);padding:30px;border:3px solid var(--ink);background:var(--panel)}
 .processing-card>p{margin:0;font-size:12px;font-weight:900;letter-spacing:.8px}

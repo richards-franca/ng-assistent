@@ -328,6 +328,7 @@ async function start() {
     $('sessionId').textContent = `NT-${String(Date.now()).slice(-3)}-${String(Math.floor(Math.random() * 90) + 10)}`;
     $('start').disabled = true;
     $('stop').disabled = false;
+    $('stopActive').disabled = false;
     setState('Gravando', true);
     setLivePhase('recording');
     setMessage('Gravação em andamento.');
@@ -339,6 +340,7 @@ async function start() {
     stopAudioMonitor();
     recordingActive = false;
     $('start').disabled = false;
+    $('stopActive').disabled = true;
     setState('Pronto para gravar');
     setLivePhase('ready');
     setMessage(`Não foi possível iniciar: ${error.message}`);
@@ -348,6 +350,7 @@ async function start() {
 function stop() {
   if (!recordingActive || !recorder) return;
   $('stop').disabled = true;
+  $('stopActive').disabled = true;
   clearInterval(timerId);
   clearInterval(segmentTimer);
   recordingActive = false;
@@ -425,6 +428,7 @@ $('confirmDelete').addEventListener('click', async () => {
 });
 $('start').addEventListener('click', start);
 $('stop').addEventListener('click', stop);
+$('stopActive').addEventListener('click', stop);
 $('finishResult').addEventListener('click', () => { clearPreviousRecord(); setLivePhase('ready'); setState('Pronto para gravar'); setMessage(''); $('clientEmail').focus(); });
 $('copyTitle').addEventListener('click', () => copyValue($('title').value, 'Título copiado.'));
 $('copyDescription').addEventListener('click', () => copyValue($('description').value, 'Descrição copiada.'));
